@@ -297,12 +297,12 @@ class NotLanded(BzCleaner):
             return {}
 
         def handler(user, data):
-            data[str(user["id"])] = user["name"]
+            data[str(user["id"])] = (user["name"], user.get("nick") or "")
 
         data = {}
         BugzillaUser(
             user_names=list(users.values()),
-            include_fields=["id", "name"],
+            include_fields=["id", "name", "nick"],
             user_handler=handler,
             user_data=data,
         ).wait()
@@ -393,8 +393,11 @@ class NotLanded(BzCleaner):
             common = all_reviewers & data["reviewers_phid"]
             if common:
                 reviewer = random.choice(list(common))
+                reviewer_mail, reviewer_nick = bz_reviewers[reviewer]
+                if not reviewer_nick:
+                    reviewer_nick = reviewer_mail.split("@", 1)[0]
                 self.add_auto_ni(
-                    bugid, {"mail": bz_reviewers[reviewer], "nickname": None}
+                    bugid, {"mail": reviewer_mail, "nickname": reviewer_nick}
                 )
 
         return res
